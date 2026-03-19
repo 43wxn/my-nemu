@@ -38,13 +38,20 @@
 #define PMEM64 1
 #endif
 
+//word_t表示机器字，muxdef用来选择isa是64/32
 typedef MUXDEF(CONFIG_ISA64, uint64_t, uint32_t) word_t;
 typedef MUXDEF(CONFIG_ISA64, int64_t, int32_t)  sword_t;
+
+//用于安全打印固定宽度整数类型
 #define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
 
+//虚拟地址类型，直接用机器字类型word_t表示
 typedef word_t vaddr_t;
+
+//
 typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;
 #define FMT_PADDR MUXDEF(PMEM64, "0x%016" PRIx64, "0x%08" PRIx32)
+//IO地址宽度为16
 typedef uint16_t ioaddr_t;
 
 #include <debug.h>

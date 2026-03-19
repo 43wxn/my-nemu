@@ -25,10 +25,13 @@ int main(int argc, char *argv[]) {
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
 #else
+//初始化monitor
   init_monitor(argc, argv);
 #endif
 
-  /* Start engine. */
+/*执行引擎启动函数
+进入sdb+执行客户机程序+驱动cpu_exec()
+*/
   engine_start();
 
   return is_exit_status_bad();
