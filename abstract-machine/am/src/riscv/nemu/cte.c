@@ -1,7 +1,7 @@
 #include <am.h>
 #include <riscv/riscv.h>
 #include <klib.h>
-
+#include <syscall.h>
 static Context* (*user_handler)(Event, Context*) = NULL;
 
 Context* __am_irq_handle(Context *c) {
@@ -15,7 +15,7 @@ Context* __am_irq_handle(Context *c) {
         } else {
           ev.event = EVENT_SYSCALL;
         }
-        c->mepc += 4;   // 跳过 ecall
+        c->mepc += 4;
         break;
 
       default:
