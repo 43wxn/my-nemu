@@ -98,29 +98,29 @@ size_t fs_write(int fd, const void *buf, size_t len) {
   return real_len;
 }
 
-size_t fs_lseek(int fd, size_t offset, int whence) {
+size_t fs_lseek(int fd, off_t offset, int whence) {
   assert(fd >= 0 && fd < NR_FILES);
 
   Finfo *f = &file_table[fd];
-  size_t new_offset = 0;
+  off_t new_offset = 0;
 
   switch (whence) {
     case SEEK_SET:
       new_offset = offset;
       break;
     case SEEK_CUR:
-      new_offset = f->open_offset + offset;
+      new_offset = (off_t)f->open_offset + offset;
       break;
     case SEEK_END:
-      new_offset = f->size + offset;
+      new_offset = (off_t)f->size + offset;
       break;
     default:
       panic("fs_lseek: invalid whence = %d", whence);
   }
 
-  assert(new_offset <= f->size);
-  f->open_offset = new_offset;
-  return new_offset;
+  assert(new_offset >= 0 && (size_t)new_offset <= f->size);
+  f->open_offset = (size_t)new_offset;
+  return f->open_offset;
 }
 
 int fs_close(int fd) {
