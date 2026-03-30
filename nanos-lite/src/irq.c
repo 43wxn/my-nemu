@@ -1,19 +1,26 @@
-#include <common.h>
+#include <am.h>
+#include <klib.h>
+#include <klib-macros.h>
+#include "proc.h"
+#include "syscall.h"
 
 void do_syscall(Context *c);
 
-static Context* do_event(Event e, Context* c) {
+static Context *do_event(Event e, Context *c) {
   switch (e.event) {
     case EVENT_YIELD:
-      printf("receive EVENT_YIELD\n");
+      yield();
       break;
+
     case EVENT_SYSCALL:
-      printf("receive EVENT_SYSCALL, no = %ld\n", c->GPR1);
       do_syscall(c);
+      c->mepc += 4;   // RISC-V: 跳过 ecall
       break;
+
     default:
       panic("Unhandled event ID = %d", e.event);
   }
+
   return c;
 }
 
