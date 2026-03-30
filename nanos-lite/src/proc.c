@@ -1,5 +1,7 @@
 #include <proc.h>
 
+void naive_uload(PCB *pcb, const char *filename);
+
 #define MAX_NR_PROC 4
 
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
@@ -24,8 +26,7 @@ void init_proc() {
 
   Log("Initializing processes...");
 
-  // load program here
-
+  naive_uload(NULL, NULL);
 }
 
 Context* schedule(Context *prev) {
