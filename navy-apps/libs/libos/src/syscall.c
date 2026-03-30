@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <time.h>
+#include <stdint.h>
 #include "syscall.h"
 
 // helper macros
@@ -24,7 +25,7 @@
 #define GPR4 _args(4, ARGS_ARRAY)
 #define GPRx _args(5, ARGS_ARRAY)
 
-// ISA-depedent definitions
+// ISA-dependent definitions
 #if defined(__ISA_X86__)
 # define ARGS_ARRAY ("int $0x80", "eax", "ebx", "ecx", "edx", "eax")
 #elif defined(__ISA_MIPS32__)
@@ -66,11 +67,27 @@ int _open(const char *path, int flags, mode_t mode) {
 }
 
 int _write(int fd, void *buf, size_t count) {
-  _exit(SYS_write);
-  return 0;
+  return _syscall_(SYS_write, fd, (intptr_t)buf, count);
 }
 
 void *_sbrk(intptr_t increment) {
+  extern char _end;  // linker script 提供的符号，表示程序结尾
+  static uintptr_t cur_brk = 0;
+
+  if (cur_brk == 0) {
+    cur_brk = (uintptr_t)&_end;
+  }
+
+  uintptr_t old_brk = cur_brk;
+  uintptr_t new_brk = cur_brk + increment;
+
+  // brk 成功返回 0，失败返回非 0（按本实验要求处理）
+  intptr_t ret = _syscall_(SYS_brk, new_brk, 0, 0);
+  if (ret == 0) {
+    cur_brk = new_brk;
+    return (void *)old_brk;
+  }
+
   return (void *)-1;
 }
 
