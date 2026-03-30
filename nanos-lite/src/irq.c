@@ -8,6 +8,7 @@ static Context* do_event(Event e, Context* c) {
       printf("receive EVENT_YIELD\n");
       break;
     case EVENT_SYSCALL:
+      printf("receive EVENT_SYSCALL, no = %ld\n", c->GPR1);
       do_syscall(c);
       break;
     default:
