@@ -29,6 +29,7 @@ void do_syscall(Context *c) {
       break;
 
     case SYS_write:
+      Log("SYS_write(fd=%d, buf=%p, len=%d)", a[1], (void *)a[2], a[3]);
       c->GPRx = fs_write(a[1], (const void *)a[2], a[3]);
       break;
 

@@ -90,6 +90,9 @@ size_t fs_read(int fd, void *buf, size_t len) {
 }
 
 size_t fs_write(int fd, const void *buf, size_t len) {
+  Log("fs_write(fd=%d, buf=%p, len=%d, off=%d)",
+      fd, buf, len, file_table[fd].open_offset);
+
   assert(fd >= 0 && fd < NR_FILES);
   Finfo *f = &file_table[fd];
 
