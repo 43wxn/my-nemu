@@ -83,13 +83,22 @@ size_t fs_write(int fd, const void *buf, size_t len) {
 
   Finfo *f = &file_table[fd];
 
+  // stdout/stderr 直接走串口，不维护 open_offset
+  if (fd == FD_STDOUT || fd == FD_STDERR) {
+    return serial_write(buf, 0, len);
+  }
+
   if (f->write != NULL && f->write != invalid_write) {
     size_t ret = f->write(buf, f->open_offset, len);
     f->open_offset += ret;
     return ret;
   }
 
-  // 普通文件写入 ramdisk；不允许越过文件末尾
+  // 普通文件写回 ramdisk，不能越界
+  if (f->open_offset >= f->size) {
+    return 0;
+  }
+
   size_t rest = f->size - f->open_offset;
   size_t real_len = len < rest ? len : rest;
 
