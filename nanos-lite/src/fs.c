@@ -91,25 +91,36 @@ size_t fs_read(int fd, void *buf, size_t len) {
 }
 
 size_t fs_write(int fd, const void *buf, size_t len) {
-  Log("fs_write(fd=%d, buf=%p, len=%d, off=%d)",
+  Log("fs_write(fd=%d, buf=%p, len=%d, off=%zu)",
       fd, buf, len, file_table[fd].open_offset);
 
   assert(fd >= 0 && fd < NR_FILES);
   Finfo *f = &file_table[fd];
 
+  // 如果有专门的写函数，使用它
   if (f->write != NULL && f->write != invalid_write) {
     size_t ret = f->write(buf, f->open_offset, len);
     f->open_offset += ret;
     return ret;
   }
 
+  // 普通文件：检查边界
+  // 注意：如果写入超出文件大小，应该允许扩展吗？
+  // 当前实现不允许超出，但 file-test 需要写入相同大小的数据
   if (f->open_offset >= f->size) {
+    Log("fs_write: offset %zu >= size %zu, returning 0", f->open_offset, f->size);
     return 0;
   }
 
   size_t remain = f->size - f->open_offset;
   size_t real_len = len < remain ? len : remain;
+  
+  if (real_len == 0) {
+    Log("fs_write: nothing to write");
+    return 0;
+  }
 
+  Log("fs_write: writing %zu bytes to disk_offset %zu", real_len, f->disk_offset + f->open_offset);
   ramdisk_write(buf, f->disk_offset + f->open_offset, real_len);
   f->open_offset += real_len;
   return real_len;
