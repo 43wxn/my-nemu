@@ -48,30 +48,42 @@
 #error _syscall_ is not implemented
 #endif
 
-intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
-  register intptr_t _a7 asm ("a7") = type;
-  register intptr_t _a0 asm ("a0") = a0;
-  register intptr_t _a1 asm ("a1") = a1;
-  register intptr_t _a2 asm ("a2") = a2;
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <assert.h>
+#include <time.h>
+#include <string.h>
+#include <stdint.h>
+#include <errno.h>
+#include "syscall.h"
+
+__attribute__((noinline))
+static intptr_t do_syscall(intptr_t type, intptr_t arg0, intptr_t arg1, intptr_t arg2) {
+  register intptr_t a0 asm("a0") = arg0;
+  register intptr_t a1 asm("a1") = arg1;
+  register intptr_t a2 asm("a2") = arg2;
+  register intptr_t a7 asm("a7") = type;
 
   asm volatile (
     "ecall"
-    : "+r"(_a0)
-    : "r"(_a7), "r"(_a1), "r"(_a2)
-    : "memory"
+    : "+r"(a0)
+    : "r"(a1), "r"(a2), "r"(a7)
+    : "memory",
+      "a3", "a4", "a5", "a6",
+      "t0", "t1", "t2", "t3", "t4", "t5", "t6"
   );
 
-  return _a0;
+  return a0;
+}
+
+intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
+  return do_syscall(type, a0, a1, a2);
 }
 
 void _exit(int status) {
   _syscall_(SYS_exit, status, 0, 0);
   while (1) {}
-}
-static void raw_puts(const char *s) {
-  size_t n = 0;
-  while (s[n]) n++;
-  _syscall_(SYS_write, 1, (intptr_t)s, n);
 }
 
 int _open(const char *path, int flags, mode_t mode) {
