@@ -44,6 +44,7 @@ void init_fs() {
 }
 
 int fs_open(const char *pathname, int flags, int mode) {
+  Log("fs_open(%s)", pathname);
   for (int i = 0; i < NR_FILES; i++) {
     if (strcmp(pathname, file_table[i].name) == 0) {
       file_table[i].open_offset = 0;
@@ -56,6 +57,7 @@ int fs_open(const char *pathname, int flags, int mode) {
 }
 
 size_t fs_read(int fd, void *buf, size_t len) {
+  Log("fs_read(fd=%d, len=%d, off=%d)", fd, len, file_table[fd].open_offset);
   assert(fd >= 0 && fd < NR_FILES);
 
   Finfo *f = &file_table[fd];
@@ -79,6 +81,8 @@ size_t fs_read(int fd, void *buf, size_t len) {
 }
 
 size_t fs_write(int fd, const void *buf, size_t len) {
+  Log("fs_write(fd=%d, len=%d, off=%d)", fd, len, file_table[fd].open_offset);
+  
   assert(fd >= 0 && fd < NR_FILES);
 
   Finfo *f = &file_table[fd];
@@ -108,6 +112,8 @@ size_t fs_write(int fd, const void *buf, size_t len) {
 }
 
 size_t fs_lseek(int fd, off_t offset, int whence) {
+  Log("fs_lseek(fd=%d, offset=%d, whence=%d, old=%d)",
+    fd, offset, whence, file_table[fd].open_offset);
   assert(fd >= 0 && fd < NR_FILES);
 
   Finfo *f = &file_table[fd];

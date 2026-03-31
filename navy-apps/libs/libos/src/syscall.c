@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 #include <stdint.h>
 #include "syscall.h"
 
@@ -115,7 +116,10 @@ int _execve(const char *fname, char * const argv[], char *const envp[]) {
 // But to pass linking, they are defined as dummy functions.
 
 int _fstat(int fd, struct stat *buf) {
-  return -1;
+  if (buf == NULL) return -1;
+  memset(buf, 0, sizeof(*buf));
+  buf->st_mode = S_IFCHR;
+  return 0;
 }
 
 int _stat(const char *fname, struct stat *buf) {
