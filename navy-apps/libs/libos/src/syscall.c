@@ -122,15 +122,7 @@ int _fstat(int fd, struct stat *buf) {
     errno = EINVAL;
     return -1;
   }
-
-  memset(buf, 0, sizeof(*buf));
-  if (fd == 0 || fd == 1 || fd == 2) {
-    buf->st_mode = S_IFCHR;
-  } else {
-    buf->st_mode = S_IFREG;
-  }
-  buf->st_blksize = 4096;
-  return 0;
+  return (int)_syscall_(SYS_fstat, fd, (intptr_t)buf, 0);
 }
 
 int _gettimeofday(struct timeval *tv, struct timezone *tz) {

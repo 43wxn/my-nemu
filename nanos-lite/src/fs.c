@@ -1,6 +1,7 @@
 #include <fs.h>
 #include <common.h>
-
+#include <sys/stat.h>
+#include <string.h>
 typedef size_t (*ReadFn) (void *buf, size_t offset, size_t len);
 typedef size_t (*WriteFn) (const void *buf, size_t offset, size_t len);
 
@@ -140,5 +141,23 @@ size_t fs_lseek(int fd, off_t offset, int whence) {
 
 int fs_close(int fd) {
   assert(fd >= 0 && fd < NR_FILES);
+  return 0;
+}
+int fs_fstat(int fd, struct stat *buf) {
+  assert(fd >= 0 && fd < NR_FILES);
+  assert(buf != NULL);
+
+  memset(buf, 0, sizeof(*buf));
+
+  // 标准输入输出错误，以及设备文件先当字符设备
+  if (fd == FD_STDIN || fd == FD_STDOUT || fd == FD_STDERR ||
+      fd == FD_EVENTS || fd == FD_DISPINFO || fd == FD_FB) {
+    buf->st_mode = S_IFCHR;
+  } else {
+    buf->st_mode = S_IFREG;
+    buf->st_size = file_table[fd].size;
+  }
+
+  buf->st_blksize = 4096;
   return 0;
 }
