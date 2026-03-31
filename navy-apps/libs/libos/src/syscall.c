@@ -49,19 +49,19 @@
 #endif
 
 intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
-  register intptr_t _gpr1 asm (GPR1) = type;
-  register intptr_t _gpr2 asm (GPR2) = a0;
-  register intptr_t _gpr3 asm (GPR3) = a1;
-  register intptr_t _gpr4 asm (GPR4) = a2;
+  register intptr_t _a7 asm ("a7") = type;
+  register intptr_t _a0 asm ("a0") = a0;
+  register intptr_t _a1 asm ("a1") = a1;
+  register intptr_t _a2 asm ("a2") = a2;
 
   asm volatile (
-    SYSCALL
-    : "+r"(_gpr2)
-    : "r"(_gpr1), "r"(_gpr3), "r"(_gpr4)
+    "ecall"
+    : "+r"(_a0)
+    : "r"(_a7), "r"(_a1), "r"(_a2)
     : "memory"
   );
 
-  return _gpr2;
+  return _a0;
 }
 
 void _exit(int status) {
@@ -74,7 +74,9 @@ int _open(const char *path, int flags, mode_t mode) {
     errno = EINVAL;
     return -1;
   }
-  return (int)_syscall_(SYS_open, (intptr_t)path, flags, mode);
+  int ret = (int)_syscall_(SYS_open, (intptr_t)path, flags, mode);
+
+  return ret;
 }
 
 ssize_t _read(int fd, void *buf, size_t count) {
