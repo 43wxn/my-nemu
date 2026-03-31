@@ -10,9 +10,7 @@ void init_proc(void);
  
 int main() {
   extern const char logo[];
-  printf("A\n");
   printf("%s", logo);
-  printf("B\n");
   Log("C");
   Log("'Hello World!' from Nanos-lite");
   Log("Build time: %s, %s", __TIME__, __DATE__);
