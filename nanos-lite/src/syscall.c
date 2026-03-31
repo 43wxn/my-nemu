@@ -20,27 +20,45 @@ void do_syscall(Context *c) {
       halt(a[1]);
       break;
 
-    case SYS_open:
+    case SYS_open: {
       Log("SYS_open(path=%p, flags=%d, mode=%d)", (void *)a[1], a[2], a[3]);
-      c->GPRx = fs_open((const char *)a[1], a[2], a[3]);
+      intptr_t ret = fs_open((const char *)a[1], a[2], a[3]);
+      Log("SYS_open -> %d", ret);
+      c->GPRx = ret;
       break;
+    }
 
-    case SYS_read:
-      c->GPRx = fs_read(a[1], (void *)a[2], a[3]);
+    case SYS_close: {
+      Log("SYS_close(fd=%d)", a[1]);
+      intptr_t ret = fs_close(a[1]);
+      Log("SYS_close -> %d", ret);
+      c->GPRx = ret;
       break;
+    }
 
-    case SYS_write:
+    case SYS_lseek: {
+      Log("SYS_lseek(fd=%d, off=%d, whence=%d)", a[1], (off_t)a[2], a[3]);
+      intptr_t ret = fs_lseek(a[1], (off_t)a[2], a[3]);
+      Log("SYS_lseek -> %d", ret);
+      c->GPRx = ret;
+      break;
+    }
+
+    case SYS_read: {
+      Log("SYS_read(fd=%d, buf=%p, len=%d)", a[1], (void *)a[2], a[3]);
+      intptr_t ret = fs_read(a[1], (void *)a[2], a[3]);
+      Log("SYS_read -> %d", ret);
+      c->GPRx = ret;
+      break;
+    }
+
+    case SYS_write: {
       Log("SYS_write(fd=%d, buf=%p, len=%d)", a[1], (void *)a[2], a[3]);
-      c->GPRx = fs_write(a[1], (const void *)a[2], a[3]);
+      intptr_t ret = fs_write(a[1], (const void *)a[2], a[3]);
+      Log("SYS_write -> %d", ret);
+      c->GPRx = ret;
       break;
-
-    case SYS_close:
-      c->GPRx = fs_close(a[1]);
-      break;
-
-    case SYS_lseek:
-      c->GPRx = fs_lseek(a[1], (off_t)a[2], a[3]);
-      break;
+    }
 
     case SYS_brk:
       c->GPRx = 0;
