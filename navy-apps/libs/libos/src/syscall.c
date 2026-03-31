@@ -68,13 +68,25 @@ void _exit(int status) {
   _syscall_(SYS_exit, status, 0, 0);
   while (1) {}
 }
+static void raw_puts(const char *s) {
+  size_t n = 0;
+  while (s[n]) n++;
+  _syscall_(SYS_write, 1, (intptr_t)s, n);
+}
 
 int _open(const char *path, int flags, mode_t mode) {
+  raw_puts("O1\n");
   if (path == NULL) {
     errno = EINVAL;
+    raw_puts("O2\n");
     return -1;
   }
+
   int ret = (int)_syscall_(SYS_open, (intptr_t)path, flags, mode);
+
+  if (ret < 0) raw_puts("O3\n");
+  else raw_puts("O4\n");
+
   return ret;
 }
 
