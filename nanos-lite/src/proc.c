@@ -23,12 +23,10 @@ void hello_fun(void *arg) {
 
 void init_proc() {
   switch_boot_pcb();
-
   Log("Initializing processes...");
-  //
-  naive_uload(NULL, "/bin/file-test");
+  naive_uload(NULL, "/bin/dummy");   // 或 /bin/file-test
 }
 
 Context* schedule(Context *prev) {
-  return NULL;
+  return prev;
 }
