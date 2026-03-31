@@ -70,12 +70,13 @@ void _exit(int status) {
 }
 
 int _open(const char *path, int flags, mode_t mode) {
+  printf("_open wrapper: path=%s flags=%d mode=%d\n", path, flags, mode);
   if (path == NULL) {
     errno = EINVAL;
     return -1;
   }
   int ret = (int)_syscall_(SYS_open, (intptr_t)path, flags, mode);
-
+  printf("_open wrapper ret=%d\n", ret);
   return ret;
 }
 
