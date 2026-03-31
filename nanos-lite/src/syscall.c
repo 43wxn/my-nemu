@@ -21,6 +21,7 @@ void do_syscall(Context *c) {
       break;
 
     case SYS_open:
+      Log("SYS_open(path=%p, flags=%d, mode=%d)", (void *)a[1], a[2], a[3]);
       c->GPRx = fs_open((const char *)a[1], a[2], a[3]);
       break;
 

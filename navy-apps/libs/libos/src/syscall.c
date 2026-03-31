@@ -5,6 +5,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #include "syscall.h"
 
 // helper macros
@@ -53,21 +54,46 @@ intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
   register intptr_t _gpr3 asm (GPR3) = a1;
   register intptr_t _gpr4 asm (GPR4) = a2;
   register intptr_t ret asm (GPRx);
-  asm volatile (SYSCALL : "=r" (ret) : "r"(_gpr1), "r"(_gpr2), "r"(_gpr3), "r"(_gpr4));
+  asm volatile (SYSCALL : "=r"(ret)
+               : "r"(_gpr1), "r"(_gpr2), "r"(_gpr3), "r"(_gpr4));
   return ret;
 }
 
 void _exit(int status) {
   _syscall_(SYS_exit, status, 0, 0);
-  while (1);
+  while (1) {}
 }
 
 int _open(const char *path, int flags, mode_t mode) {
-  return _syscall_(SYS_open, (intptr_t)path, flags, mode);
+  if (path == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+  return (int)_syscall_(SYS_open, (intptr_t)path, flags, mode);
+}
+
+ssize_t _read(int fd, void *buf, size_t count) {
+  if (buf == NULL && count != 0) {
+    errno = EINVAL;
+    return -1;
+  }
+  return (ssize_t)_syscall_(SYS_read, fd, (intptr_t)buf, count);
 }
 
 ssize_t _write(int fd, const void *buf, size_t count) {
-  return _syscall_(SYS_write, fd, (intptr_t)buf, count);
+  if (buf == NULL && count != 0) {
+    errno = EINVAL;
+    return -1;
+  }
+  return (ssize_t)_syscall_(SYS_write, fd, (intptr_t)buf, count);
+}
+
+int _close(int fd) {
+  return (int)_syscall_(SYS_close, fd, 0, 0);
+}
+
+off_t _lseek(int fd, off_t offset, int whence) {
+  return (off_t)_syscall_(SYS_lseek, fd, offset, whence);
 }
 
 void *_sbrk(intptr_t increment) {
@@ -87,115 +113,140 @@ void *_sbrk(intptr_t increment) {
     return (void *)old_brk;
   }
 
+  errno = ENOMEM;
   return (void *)-1;
 }
 
-ssize_t _read(int fd, void *buf, size_t count) {
-  return _syscall_(SYS_read, fd, (intptr_t)buf, count);
-}
+int _fstat(int fd, struct stat *buf) {
+  if (buf == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
 
-int _close(int fd) {
-  return _syscall_(SYS_close, fd, 0, 0);
-}
-
-off_t _lseek(int fd, off_t offset, int whence) {
-  return _syscall_(SYS_lseek, fd, offset, whence);
+  memset(buf, 0, sizeof(*buf));
+  if (fd == 0 || fd == 1 || fd == 2) {
+    buf->st_mode = S_IFCHR;
+  } else {
+    buf->st_mode = S_IFREG;
+  }
+  buf->st_blksize = 4096;
+  return 0;
 }
 
 int _gettimeofday(struct timeval *tv, struct timezone *tz) {
-  _exit(SYS_gettimeofday);
-  return 0;
+  (void)tv;
+  (void)tz;
+  errno = ENOSYS;
+  return -1;
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _exit(SYS_execve);
-  return 0;
+  (void)fname;
+  (void)argv;
+  (void)envp;
+  errno = ENOSYS;
+  return -1;
 }
 
 // Syscalls below are not used in Nanos-lite.
 // But to pass linking, they are defined as dummy functions.
 
-int _fstat(int fd, struct stat *buf) {
-  if (buf == NULL) return -1;
-  memset(buf, 0, sizeof(*buf));
-  buf->st_mode = S_IFCHR;
-  return 0;
-}
-
 int _stat(const char *fname, struct stat *buf) {
-  assert(0);
+  (void)fname;
+  (void)buf;
+  errno = ENOSYS;
   return -1;
 }
 
 int _kill(int pid, int sig) {
-  _exit(-SYS_kill);
+  (void)pid;
+  (void)sig;
+  errno = ENOSYS;
   return -1;
 }
 
 pid_t _getpid() {
-  _exit(-SYS_getpid);
   return 1;
 }
 
 pid_t _fork() {
-  assert(0);
+  errno = ENOSYS;
   return -1;
 }
 
 pid_t vfork() {
-  assert(0);
+  errno = ENOSYS;
   return -1;
 }
 
 int _link(const char *d, const char *n) {
-  assert(0);
+  (void)d;
+  (void)n;
+  errno = ENOSYS;
   return -1;
 }
 
 int _unlink(const char *n) {
-  assert(0);
+  (void)n;
+  errno = ENOSYS;
   return -1;
 }
 
 pid_t _wait(int *status) {
-  assert(0);
+  (void)status;
+  errno = ENOSYS;
   return -1;
 }
 
 clock_t _times(void *buf) {
-  assert(0);
-  return 0;
+  (void)buf;
+  errno = ENOSYS;
+  return (clock_t)-1;
 }
 
 int pipe(int pipefd[2]) {
-  assert(0);
+  (void)pipefd;
+  errno = ENOSYS;
   return -1;
 }
 
 int dup(int oldfd) {
-  assert(0);
+  (void)oldfd;
+  errno = ENOSYS;
   return -1;
 }
 
 int dup2(int oldfd, int newfd) {
+  (void)oldfd;
+  (void)newfd;
+  errno = ENOSYS;
   return -1;
 }
 
 unsigned int sleep(unsigned int seconds) {
-  assert(0);
-  return -1;
+  (void)seconds;
+  errno = ENOSYS;
+  return 0;
 }
 
 ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) {
-  assert(0);
+  (void)pathname;
+  (void)buf;
+  (void)bufsiz;
+  errno = ENOSYS;
   return -1;
 }
 
 int symlink(const char *target, const char *linkpath) {
-  assert(0);
+  (void)target;
+  (void)linkpath;
+  errno = ENOSYS;
   return -1;
 }
 
 int ioctl(int fd, unsigned long request, ...) {
+  (void)fd;
+  (void)request;
+  errno = ENOSYS;
   return -1;
 }
