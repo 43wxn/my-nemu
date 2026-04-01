@@ -9,5 +9,10 @@
 !README.md
 !.gitignore
 !init.sh
+!TESTING.md
+!/scripts/
+!/scripts/run_c_tests.sh
+!/test_support/
+!/test_support/trap.h
 /fceux-am
 /am-kernels
